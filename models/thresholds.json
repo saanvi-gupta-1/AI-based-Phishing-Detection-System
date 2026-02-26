@@ -1,0 +1,7 @@
+{
+  "RandomForest": 0.2,
+  "ExtraTrees": 0.2,
+  "GradientBoosting": 0.2,
+  "LogisticRegression": 0.2,
+  "VotingEnsemble": 0.2
+}
