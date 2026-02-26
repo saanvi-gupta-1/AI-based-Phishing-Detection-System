@@ -303,9 +303,9 @@ def extract_features(url: str) -> dict:
 
     # ── 12. India-specific threat signals ────────────────────────────────────
     # Common phishing TLDs used against Indian brands
+    # Note: co.in is a legitimate Indian TLD — excluded intentionally
     f["indian_phishing_tld"] = int(suffix in {
-        "xyz", "top", "shop", "site", "online", "world", "buzz",
-        "in", "co.in"  # legitimate but abused too
+        "xyz", "top", "shop", "site", "online", "world", "buzz"
     })
     # Legitimate Indian domain
     f["legitimate_indian_domain"] = int(

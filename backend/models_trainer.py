@@ -662,26 +662,26 @@ def train(csv_path: str, models_dir: str, seed: int = 42) -> dict:
         voting="soft",
         n_jobs=-1,
     )
-    voting_raw.fit(X_tr_aug, y_tr_aug)
+    voting_raw.fit(X_tr_sc, y_tr_aug)
 
-    # Calibrate on val set
+    # Calibrate on val set (use scaled val)
     cal_v = CalibratedClassifierCV(voting_raw, cv="prefit", method="isotonic")
-    cal_v.fit(X_val, y_val)
+    cal_v.fit(X_val_sc, y_val)
 
     # Tune threshold on val (not test)
-    y_prob_val_v = cal_v.predict_proba(X_val)[:, 1]
+    y_prob_val_v = cal_v.predict_proba(X_val_sc)[:, 1]
     best_t_v, _, sweep_df = tune_threshold(y_val, y_prob_val_v, "f1_safe")
     thresholds["Ensemble"] = best_t_v
 
     # Evaluate on test
-    y_prob_te_v = cal_v.predict_proba(X_test)[:, 1]
+    y_prob_te_v = cal_v.predict_proba(X_test_sc)[:, 1]
     y_pred_te_v = (y_prob_te_v >= best_t_v).astype(int)
     m_v         = compute_metrics(y_test, y_pred_te_v, y_prob_te_v)
     test_results["Ensemble"] = m_v
-    final_models["Ensemble"] = (cal_v, False)
+    final_models["Ensemble"] = (cal_v, True)  # True = needs scaling
 
     # Overfit gap for ensemble
-    y_prob_tr_v  = cal_v.predict_proba(X_tr_aug)[:, 1]
+    y_prob_tr_v  = cal_v.predict_proba(X_tr_sc)[:, 1]
     train_f1_v   = f1_score(y_tr_aug, (y_prob_tr_v >= best_t_v).astype(int),
                             average="weighted", zero_division=0)
     gap_v = train_f1_v - m_v["f1_weighted"]
@@ -720,7 +720,8 @@ def train(csv_path: str, models_dir: str, seed: int = 42) -> dict:
 
 # Extract underlying estimator from calibrated model
        best_model_obj, needs_scale_flag = final_models[best_name]
-       base_model = best_model_obj.base_estimator
+       base_model = getattr(best_model_obj, "estimator",
+                            getattr(best_model_obj, "base_estimator", None))
 
        if hasattr(base_model, "feature_importances_"):
            importances = base_model.feature_importances_
@@ -811,6 +812,10 @@ class PhishingDetector:
         self.ensemble  = joblib.load(os.path.join(models_dir, "ensemble.pkl"))
         self.keep_mask = np.load(os.path.join(models_dir, "keep_mask.npy"))
 
+        # Load scaler — required to normalise features before inference
+        scaler_path = os.path.join(models_dir, "scaler.pkl")
+        self.scaler = joblib.load(scaler_path) if os.path.exists(scaler_path) else None
+
         with open(os.path.join(models_dir, "thresholds.json")) as f:
             thr = json.load(f)
         self.threshold = thr.get("Ensemble", 0.5)
@@ -821,7 +826,7 @@ class PhishingDetector:
                 self._trusted = set(json.load(f))
         else:
             self._trusted = TRUSTED_DOMAINS.copy()
-        
+
         with open(os.path.join(models_dir, "active_features.json")) as f:
              self.active_features = json.load(f)
 
@@ -849,10 +854,14 @@ class PhishingDetector:
             for col in FEATURE_NAMES:
                 if col not in feat_df.columns:
                      feat_df[col] = 0
-   
+
             feat_df = feat_df[FEATURE_NAMES]
             X = feat_df.values
-            X = X[:, self.keep_mask] 
+            X = X[:, self.keep_mask]
+
+            # Apply scaler if available (required for correct inference)
+            if self.scaler is not None:
+                X = self.scaler.transform(X)
 
             probs = self.ensemble.predict_proba(X)[:, 1]
             for j, (url, prob) in enumerate(zip(ml_urls, probs)):
