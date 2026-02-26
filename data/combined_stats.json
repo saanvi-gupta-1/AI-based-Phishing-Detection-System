@@ -1,0 +1,9 @@
+{
+  "total": 8085,
+  "safe": 5051,
+  "phishing": 3034,
+  "safe_ratio": 0.6247,
+  "phishing_ratio": 0.3753,
+  "phiusiil_safe_sampled": 5000,
+  "phiusiil_phishing_sampled": 3000
+}
