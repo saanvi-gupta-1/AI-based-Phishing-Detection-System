@@ -649,8 +649,8 @@ def train(csv_path: str, models_dir: str, seed: int = 42) -> dict:
     ensemble_members = []
 
     for n, m in models_dict.items():
-    if n == "LR":
-        continue
+       if n == "LR":
+          continue
 
     m_copy = copy.deepcopy(m)
 
