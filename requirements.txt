@@ -1,0 +1,24 @@
+# Cognitive Firewall v2 — Python Requirements
+# Install with: pip install -r requirements.txt
+
+# Core ML
+scikit-learn>=1.2.0
+numpy>=1.24.0
+pandas>=1.5.0
+joblib>=1.2.0
+
+# API backend
+fastapi>=0.100.0
+uvicorn[standard]>=0.22.0
+python-multipart>=0.0.6
+pydantic>=2.0.0
+
+# Optional: better models (install separately if network available)
+xgboost>=1.7.0
+lightgbm>=4.0.0
+
+# Optional: WHOIS / DNS enrichment
+python-whois>=0.9.0
+dnspython>=2.3.0
+# Optional: better URL parsing
+tldextract>=3.4.0
