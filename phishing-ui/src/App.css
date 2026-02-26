@@ -1,4 +1,4 @@
-* {
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -6,17 +6,16 @@
 
 html, body {
   width: 100%;
-  min-height: 100vh;
+  height: 100%;
   overflow-x: hidden;
-  background-color: #0f1117;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background: #0d0d1a;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
   text-align: left;
 }

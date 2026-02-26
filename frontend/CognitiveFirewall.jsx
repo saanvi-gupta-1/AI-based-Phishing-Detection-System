@@ -677,7 +677,7 @@ export default function CognitiveFirewall() {
       </div>
 
       {/* Content */}
-      <div style={{ maxWidth:1200, margin:"0 auto", padding:"1.6rem 1.5rem" }}>
+      <div style={{ width:"100%", padding:"1.6rem 2rem", boxSizing:"border-box" }}>
         {tab === "dashboard" && <TabDashboard stats={stats} events={events}/>}
         {tab === "scanner"   && <TabScanner/>}
         {tab === "database"  && <TabDatabase/>}
