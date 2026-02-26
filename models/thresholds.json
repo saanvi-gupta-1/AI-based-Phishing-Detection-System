@@ -1,7 +1,9 @@
 {
-  "RandomForest": 0.2,
-  "ExtraTrees": 0.2,
-  "GradientBoosting": 0.2,
-  "LogisticRegression": 0.2,
-  "VotingEnsemble": 0.2
+  "RF": 0.57,
+  "ET": 0.33,
+  "GB": 0.6,
+  "LR": 0.18,
+  "XGB": 0.76,
+  "LGBM": 0.49,
+  "Ensemble": 0.1
 }

@@ -14,6 +14,7 @@ import re
 import json
 import time
 import numpy as np
+import joblib
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -126,9 +127,21 @@ def test_model_prediction():
         if col not in feat_df.columns:
             feat_df[col] = 0
     feat_df = feat_df[feature_names].fillna(0).astype(float)
+    # Load preprocessing artifacts
+    keep_mask_path = os.path.join(MODELS_DIR, "keep_mask.npy")
+    scaler_path = os.path.join(MODELS_DIR, "scaler.pkl")
 
-    preds = model.predict(feat_df.values)
-    probs = model.predict_proba(feat_df.values)[:, 1]
+    keep_mask = np.load(keep_mask_path)
+    scaler = joblib.load(scaler_path)
+
+# Apply same preprocessing as training
+    X = feat_df.values
+    X = X[:, keep_mask]          # Apply feature selection
+    X = scaler.transform(X)      # Apply scaling
+
+    preds = model.predict(X)
+    probs = model.predict_proba(X)[:, 1]
+
 
     print(f"\n  {'URL':<40} {'True':>5} {'Pred':>5} {'Conf%':>7}  Status")
     print(f"  {'-'*65}")

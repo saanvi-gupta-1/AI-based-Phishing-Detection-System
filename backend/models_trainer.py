@@ -651,14 +651,11 @@ def train(csv_path: str, models_dir: str, seed: int = 42) -> dict:
     for n, m in models_dict.items():
        if n == "LR":
           continue
-
-    m_copy = copy.deepcopy(m)
-
-    # Remove early stopping if present (critical fix)
-    if n == "XGB" and HAS_XGB:
-        m_copy.set_params(early_stopping_rounds=None)
-
-    ensemble_members.append((n, m_copy))
+       m_copy = copy.deepcopy(m)
+       if n == "XGB" and HAS_XGB:
+           m_copy.set_params(early_stopping_rounds=None)
+       ensemble_members.append((n, m_copy))
+    print("  Ensemble members:", [n for n, _ in ensemble_members])
 
     voting_raw = VotingClassifier(
         estimators=ensemble_members,
@@ -719,12 +716,21 @@ def train(csv_path: str, models_dir: str, seed: int = 42) -> dict:
 
     # Feature importance from RF
     try:
-        rf_est   = voting_raw.named_estimators_["RF"]
-        imp_df   = pd.DataFrame({
-            "feature":    active_features,
-            "importance": rf_est.feature_importances_,
-        }).sort_values("importance", ascending=False)
-        imp_df.to_csv(os.path.join(models_dir, "feature_importance.csv"), index=False)
+       best_name = max(test_results, key=lambda n: test_results[n]["f1_weighted"])
+
+# Extract underlying estimator from calibrated model
+       best_model_obj, needs_scale_flag = final_models[best_name]
+       base_model = best_model_obj.base_estimator
+
+       if hasattr(base_model, "feature_importances_"):
+           importances = base_model.feature_importances_
+       else:
+           importances = np.zeros(len(active_features))
+
+       imp_df = pd.DataFrame({
+     "feature": active_features,
+      "importance": importances}).sort_values("importance", ascending=False)
+       imp_df.to_csv(os.path.join(models_dir, "feature_importance.csv"), index=False)
     except Exception:
         imp_df = pd.DataFrame({"feature": active_features,
                                "importance": [0]*len(active_features)})
@@ -815,6 +821,9 @@ class PhishingDetector:
                 self._trusted = set(json.load(f))
         else:
             self._trusted = TRUSTED_DOMAINS.copy()
+        
+        with open(os.path.join(models_dir, "active_features.json")) as f:
+             self.active_features = json.load(f)
 
     def predict(self, urls: list) -> list:
         results  = [None] * len(urls)
@@ -839,9 +848,11 @@ class PhishingDetector:
             feat_df = extract_features_batch(ml_urls)
             for col in FEATURE_NAMES:
                 if col not in feat_df.columns:
-                    feat_df[col] = 0
-            X = feat_df[FEATURE_NAMES].fillna(0).replace([np.inf,-np.inf], 0).astype(float).values
-            X = X[:, self.keep_mask]   # same feature filter applied at training
+                     feat_df[col] = 0
+   
+            feat_df = feat_df[FEATURE_NAMES]
+            X = feat_df.values
+            X = X[:, self.keep_mask] 
 
             probs = self.ensemble.predict_proba(X)[:, 1]
             for j, (url, prob) in enumerate(zip(ml_urls, probs)):
