@@ -285,6 +285,9 @@ def extract_features(url: str) -> dict:
     f["suspicious_keyword_count"] = sum(kw in url_low for kw in SUSPICIOUS_KEYWORDS)
     f["has_brand_keyword"] = int(any(bk in url_low for bk in BRAND_KEYWORDS))
     f["brand_in_subdomain"] = int(any(bk in subdomain.lower() for bk in BRAND_KEYWORDS))
+    f["brand_as_subdomain_fqdn"] = int(
+    any(td in subdomain.lower() for td in TRUSTED_DOMAINS)
+    )
     f["brand_in_path"] = int(any(bk in path_low for bk in BRAND_KEYWORDS))
 
     # ── 10. Typosquatting / brand abuse ──────────────────────────────────────
@@ -318,6 +321,12 @@ def extract_features(url: str) -> dict:
     f["indian_bank_phishing"] = int(
         f["indian_bank_keyword"] == 1 and f["is_trusted_domain"] == 0
     )
+    GOV_BRANDS_SET = {"irs", "usps", "ssa", "fbi", "cdc", "uidai", "epfindia", "incometax"}
+    f["gov_brand_wrong_tld"] = int(
+    any(b in domain.lower() for b in GOV_BRANDS_SET)
+    and suffix not in {"gov", "gov.in", "nic.in"}
+    and not f["is_trusted_domain"]
+)
 
     # ── 13. Lexical / token features ─────────────────────────────────────────
     tokens = re.split(r"[.\-_/=?&]", url_low)
@@ -357,6 +366,8 @@ def extract_features(url: str) -> dict:
     risk += f["brand_similarity_score"] * 0.2
     risk -= f["is_trusted_domain"] * 0.5
     risk -= f["has_https"] * 0.05
+    risk += f["brand_as_subdomain_fqdn"] * 0.40   # very strong signal
+    risk += f["gov_brand_wrong_tld"] * 0.35
     f["heuristic_risk_score"] = round(min(max(risk, 0.0), 1.0), 4)
 
     return f

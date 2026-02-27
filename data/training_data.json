@@ -1,0 +1,911 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "total_examples": 80,
+    "description": "Phishing detection training dataset. Each example includes the domain/URL, label, confidence, and a structured explanation of the signals that determine the classification. Use this for few-shot prompting, fine-tuning, or as ground truth for an ML classifier.",
+    "labels": {
+      "phishing": "Malicious domain attempting to deceive users",
+      "legitimate": "Genuine domain belonging to the claimed organization"
+    }
+  },
+  "signal_taxonomy": {
+    "brand_in_subdomain": "A real brand name appears left of a suspicious root domain (e.g., paypal.attacker.com)",
+    "brand_in_path": "Brand name stuffed into the URL path rather than the root domain",
+    "lookalike_tld": "Uses an unusual TLD where the real brand uses .com/.org/.gov",
+    "typosquat": "Domain is a minor misspelling or character substitution of a real brand",
+    "homograph": "Uses Unicode/IDN characters that visually resemble ASCII characters",
+    "excessive_hyphens": "Multiple hyphens used to mimic brand-keyword combinations",
+    "excessive_subdomains": "Unusually deep subdomain nesting to bury the real root domain",
+    "keyword_stuffing": "Multiple trust-building keywords in domain (secure, login, verify, update)",
+    "legitimate_tld_match": "Domain uses the expected TLD for its category (bank→.com, gov→.gov)",
+    "brand_is_root": "The brand name IS the root domain, not buried in a subdomain",
+    "aged_consistent_domain": "Domain pattern consistent with long-running legitimate service",
+    "url_shortener": "Uses a URL shortener to hide real destination",
+    "ip_address_url": "Uses raw IP address instead of a domain name",
+    "free_hosting": "Hosted on a free hosting/website builder platform",
+    "mismatched_context": "Domain name doesn't match the claimed sender context",
+    "punycode": "Uses punycode encoding (xn--) to create visual lookalikes"
+  },
+  "examples": [
+    {
+      "id": "001",
+      "input": "paypal.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "PayPal's actual root domain. The brand name is the root, uses .com, no suspicious patterns."
+    },
+    {
+      "id": "002",
+      "input": "paypal-secure-login.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "PayPal's real domain is paypal.com. Adding 'secure-login' via hyphens is a classic phishing pattern — the brand is used but the root domain is entirely attacker-controlled."
+    },
+    {
+      "id": "003",
+      "input": "secure.paypal.com",
+      "label": "legitimate",
+      "confidence": 0.97,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "Root domain is paypal.com. 'secure' is just a subdomain on PayPal's own domain — this is a normal pattern for large companies."
+    },
+    {
+      "id": "004",
+      "input": "paypal.secure-verify.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Root domain is secure-verify.com (attacker-controlled). PayPal is only a subdomain — the attacker owns everything after the last dot before the TLD."
+    },
+    {
+      "id": "005",
+      "input": "amazon.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Amazon's actual domain."
+    },
+    {
+      "id": "006",
+      "input": "amazon-prime-billing.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Amazon's real domain is amazon.com. The hyphenated billing/prime additions signal a fake domain attempting to intercept billing interactions."
+    },
+    {
+      "id": "007",
+      "input": "amaz0n.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Zero (0) substituted for the letter 'o'. Classic typosquat."
+    },
+    {
+      "id": "008",
+      "input": "arnazon.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat"]
+      },
+      "explanation": "'rn' visually resembles 'm' — arnazon vs amazon. Low-visibility typosquat."
+    },
+    {
+      "id": "009",
+      "input": "wellsfargo.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Wells Fargo's actual domain."
+    },
+    {
+      "id": "010",
+      "input": "wellsfargo-account-update.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Real domain is wellsfargo.com. 'account-update' suffix is a social engineering hook common in bank phishing."
+    },
+    {
+      "id": "011",
+      "input": "secure.wellsfargo.com",
+      "label": "legitimate",
+      "confidence": 0.96,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "Root is wellsfargo.com — legitimate subdomain."
+    },
+    {
+      "id": "012",
+      "input": "wellsfargo.com.account-verify.net",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "keyword_stuffing", "excessive_subdomains"]
+      },
+      "explanation": "Root domain is account-verify.net. wellsfargo.com is just a subdomain label — this is one of the most dangerous patterns because the URL looks legitimate at a glance."
+    },
+    {
+      "id": "013",
+      "input": "apple.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Apple's actual domain."
+    },
+    {
+      "id": "014",
+      "input": "appleid.apple.com",
+      "label": "legitimate",
+      "confidence": 0.98,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "Root is apple.com. Apple legitimately uses appleid.apple.com for account management."
+    },
+    {
+      "id": "015",
+      "input": "apple-id-verification.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Apple's real domain is apple.com. 'verification' keyword is a social engineering red flag."
+    },
+    {
+      "id": "016",
+      "input": "id.apple.com.secure-update.xyz",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "lookalike_tld", "keyword_stuffing"]
+      },
+      "explanation": "Root is secure-update.xyz. .xyz is a red flag for brand impersonation. Apple.com is just a subdomain label."
+    },
+    {
+      "id": "017",
+      "input": "microsoft.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Microsoft's actual domain."
+    },
+    {
+      "id": "018",
+      "input": "login.microsoftonline.com",
+      "label": "legitimate",
+      "confidence": 0.97,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "microsoftonline.com is a legitimate Microsoft-owned domain for Office 365 sign-in."
+    },
+    {
+      "id": "019",
+      "input": "microsoft-support-ticket.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Tech support scam domain. Microsoft support is accessed via microsoft.com/support."
+    },
+    {
+      "id": "020",
+      "input": "micros0ft.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Zero substituted for 'o'."
+    },
+    {
+      "id": "021",
+      "input": "irs.gov",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "IRS official domain. US government agencies use .gov."
+    },
+    {
+      "id": "022",
+      "input": "irs-tax-refund.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["lookalike_tld", "keyword_stuffing", "mismatched_context"]
+      },
+      "explanation": "The IRS only operates from irs.gov. Any .com domain claiming to be the IRS is fraudulent."
+    },
+    {
+      "id": "023",
+      "input": "irs.gov.tax-update.com",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "lookalike_tld"]
+      },
+      "explanation": "irs.gov is a subdomain — root is tax-update.com. Government agencies do not have .com roots."
+    },
+    {
+      "id": "024",
+      "input": "google.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Google's actual domain."
+    },
+    {
+      "id": "025",
+      "input": "accounts.google.com",
+      "label": "legitimate",
+      "confidence": 0.99,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "Root is google.com. Google legitimately uses accounts.google.com for login."
+    },
+    {
+      "id": "026",
+      "input": "google-docs-shared.com",
+      "label": "phishing",
+      "confidence": 0.96,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Google Docs is at docs.google.com. Hyphenated fake domains are used for credential harvesting."
+    },
+    {
+      "id": "027",
+      "input": "chase.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "JPMorgan Chase's actual domain."
+    },
+    {
+      "id": "028",
+      "input": "chase-online-banking-login.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Chase only operates from chase.com. Excessive keyword addition is a clear phishing signal."
+    },
+    {
+      "id": "029",
+      "input": "ch4se.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Number 4 substituted for letter 'a'."
+    },
+    {
+      "id": "030",
+      "input": "xn--pple-43d.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["punycode", "homograph"]
+      },
+      "explanation": "Punycode-encoded domain that renders visually similar to 'apple.com' using non-ASCII characters."
+    },
+    {
+      "id": "031",
+      "input": "192.168.1.1/login/paypal",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["ip_address_url", "brand_in_path"]
+      },
+      "explanation": "Legitimate services never use IP addresses for login pages. Brand name in path is a diversion."
+    },
+    {
+      "id": "032",
+      "input": "bit.ly/3xPayPa1",
+      "label": "phishing",
+      "confidence": 0.85,
+      "signals": {
+        "positive": [],
+        "negative": ["url_shortener", "brand_in_path"]
+      },
+      "explanation": "URL shortener hides the real destination. Brand name with homograph substitution in the slug is a strong phishing indicator. Confidence slightly lower because bit.ly is also used legitimately."
+    },
+    {
+      "id": "033",
+      "input": "myaccount-paypal.weebly.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["free_hosting", "brand_in_subdomain", "keyword_stuffing"]
+      },
+      "explanation": "Root is weebly.com (free website builder). PayPal has no presence on Weebly."
+    },
+    {
+      "id": "034",
+      "input": "netflix.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Netflix's actual domain."
+    },
+    {
+      "id": "035",
+      "input": "netflix-billing-update.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Netflix billing is at netflix.com. Payment update phishing is extremely common for streaming services."
+    },
+    {
+      "id": "036",
+      "input": "netfllx.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat"]
+      },
+      "explanation": "Extra 'l' inserted. Close visual match to netflix.com."
+    },
+    {
+      "id": "037",
+      "input": "facebook.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Facebook/Meta's actual domain."
+    },
+    {
+      "id": "038",
+      "input": "faceb00k.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Double zero substitution for 'oo'."
+    },
+    {
+      "id": "039",
+      "input": "facebook-login-help.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Facebook support is at facebook.com/help."
+    },
+    {
+      "id": "040",
+      "input": "linkedin.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "LinkedIn's actual domain."
+    },
+    {
+      "id": "041",
+      "input": "lnkedin.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat"]
+      },
+      "explanation": "Missing 'i' — lnkedin vs linkedin."
+    },
+    {
+      "id": "042",
+      "input": "linkedin-jobs-apply.com",
+      "label": "phishing",
+      "confidence": 0.96,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Job application phishing — a growing attack vector targeting job seekers."
+    },
+    {
+      "id": "043",
+      "input": "dropbox.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Dropbox's actual domain."
+    },
+    {
+      "id": "044",
+      "input": "dropbox-shared-file.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "File-sharing lure. Real shared files come from dropbox.com."
+    },
+    {
+      "id": "045",
+      "input": "dr0pbox.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Zero substituted for 'o'."
+    },
+    {
+      "id": "046",
+      "input": "dhl.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "DHL's actual domain."
+    },
+    {
+      "id": "047",
+      "input": "dhl-tracking-parcel.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Shipping notification phishing is one of the most common vectors. Real DHL tracking is at dhl.com/track."
+    },
+    {
+      "id": "048",
+      "input": "fedex-delivery-notice.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "FedEx's domain is fedex.com. Delivery notice phishing spikes around holidays."
+    },
+    {
+      "id": "049",
+      "input": "usps.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "USPS official domain."
+    },
+    {
+      "id": "050",
+      "input": "usps-package-hold.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["lookalike_tld", "keyword_stuffing", "mismatched_context"]
+      },
+      "explanation": "USPS operates from usps.com. 'package-hold' is a fear-based lure."
+    },
+    {
+      "id": "051",
+      "input": "steampowered.com",
+      "label": "legitimate",
+      "confidence": 0.98,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Valve's Steam platform domain."
+    },
+    {
+      "id": "052",
+      "input": "steamcommunity.com",
+      "label": "legitimate",
+      "confidence": 0.97,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Legitimate Steam community domain owned by Valve."
+    },
+    {
+      "id": "053",
+      "input": "steam-free-games.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Gaming credential phishing. 'Free games' is a common lure targeting younger users."
+    },
+    {
+      "id": "054",
+      "input": "coinbase.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Coinbase's actual domain."
+    },
+    {
+      "id": "055",
+      "input": "coinbase-wallet-verify.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Crypto phishing — extremely high-value targets. Real Coinbase is at coinbase.com."
+    },
+    {
+      "id": "056",
+      "input": "co1nbase.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "homograph"]
+      },
+      "explanation": "Number 1 substituted for 'i'."
+    },
+    {
+      "id": "057",
+      "input": "metamask.io",
+      "label": "legitimate",
+      "confidence": 0.97,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "MetaMask's actual domain (.io is standard for crypto/tech companies)."
+    },
+    {
+      "id": "058",
+      "input": "metamask-wallet-connect.com",
+      "label": "phishing",
+      "confidence": 0.99,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "lookalike_tld", "keyword_stuffing"]
+      },
+      "explanation": "MetaMask is at metamask.io. Wallet connect phishing is used to drain crypto wallets."
+    },
+    {
+      "id": "059",
+      "input": "bankofamerica.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Bank of America's actual domain."
+    },
+    {
+      "id": "060",
+      "input": "bankofamerica-secure.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "BofA's real domain is bankofamerica.com. 'secure' suffix is ironic — it's actually the threat."
+    },
+    {
+      "id": "061",
+      "input": "docusign.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "DocuSign's actual domain."
+    },
+    {
+      "id": "062",
+      "input": "docusign-document-ready.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Document-ready lures are effective because they create urgency. Real DocuSign notifications link to docusign.com."
+    },
+    {
+      "id": "063",
+      "input": "zoom.us",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Zoom's actual domain (.us is legitimate for Zoom)."
+    },
+    {
+      "id": "064",
+      "input": "zoom-meeting-invite.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens", "lookalike_tld"]
+      },
+      "explanation": "Zoom's real domain is zoom.us. Meeting invite phishing delivers malware via fake installer downloads."
+    },
+    {
+      "id": "065",
+      "input": "github.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "GitHub's actual domain."
+    },
+    {
+      "id": "066",
+      "input": "github-oauth-login.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Developer credential phishing. GitHub OAuth is only at github.com."
+    },
+    {
+      "id": "067",
+      "input": "giithub.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat"]
+      },
+      "explanation": "Double 'i' insertion. Common typosquat."
+    },
+    {
+      "id": "068",
+      "input": "twitter.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Twitter/X's domain (both twitter.com and x.com are legitimate)."
+    },
+    {
+      "id": "069",
+      "input": "twltter.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat"]
+      },
+      "explanation": "'i' replaced with 'l' — near-identical visual appearance."
+    },
+    {
+      "id": "070",
+      "input": "twitter-verification-badge.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Verification badge scams target users trying to get verified. Twitter verification is at twitter.com/settings."
+    },
+    {
+      "id": "071",
+      "input": "support.apple.com",
+      "label": "legitimate",
+      "confidence": 0.99,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match"],
+        "negative": []
+      },
+      "explanation": "Root is apple.com — legitimate Apple support subdomain."
+    },
+    {
+      "id": "072",
+      "input": "apple.com.support-verification.net",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "keyword_stuffing", "lookalike_tld"]
+      },
+      "explanation": "Root is support-verification.net. apple.com is just a subdomain label. .net for Apple support is also suspicious."
+    },
+    {
+      "id": "073",
+      "input": "amazon.co.uk",
+      "label": "legitimate",
+      "confidence": 0.99,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Amazon's legitimate UK domain. Country-code TLDs are expected for global brands."
+    },
+    {
+      "id": "074",
+      "input": "amazon.co.uk.account-help.com",
+      "label": "phishing",
+      "confidence": 1.0,
+      "signals": {
+        "positive": [],
+        "negative": ["brand_in_subdomain", "keyword_stuffing"]
+      },
+      "explanation": "Root is account-help.com. amazon.co.uk is a multi-level subdomain used to deceive."
+    },
+    {
+      "id": "075",
+      "input": "office.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Microsoft Office/M365's portal domain."
+    },
+    {
+      "id": "076",
+      "input": "microsoft365-login-portal.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Microsoft 365 login is at login.microsoftonline.com. This pattern is widely used in BEC (Business Email Compromise) attacks."
+    },
+    {
+      "id": "077",
+      "input": "intuit.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Intuit's actual domain (parent of TurboTax, QuickBooks)."
+    },
+    {
+      "id": "078",
+      "input": "turbotax-refund-status.com",
+      "label": "phishing",
+      "confidence": 0.98,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens", "mismatched_context"]
+      },
+      "explanation": "Tax season phishing. TurboTax is at turbotax.intuit.com."
+    },
+    {
+      "id": "079",
+      "input": "spotify.com",
+      "label": "legitimate",
+      "confidence": 1.0,
+      "signals": {
+        "positive": ["brand_is_root", "legitimate_tld_match", "aged_consistent_domain"],
+        "negative": []
+      },
+      "explanation": "Spotify's actual domain."
+    },
+    {
+      "id": "080",
+      "input": "spotify-premium-free.com",
+      "label": "phishing",
+      "confidence": 0.97,
+      "signals": {
+        "positive": [],
+        "negative": ["typosquat", "keyword_stuffing", "excessive_hyphens"]
+      },
+      "explanation": "Free premium lure. Spotify's subscription is only managed at spotify.com. Credential theft targeting streaming logins."
+    }
+  ]
+}
