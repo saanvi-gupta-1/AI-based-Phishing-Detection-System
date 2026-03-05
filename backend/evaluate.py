@@ -28,7 +28,7 @@ _detector = None
 _heuristic_only = False
 
 try:
-    from model_trainer import PhishingDetector
+    from models_trainer import PhishingDetector
     _detector = PhishingDetector(MDL)
     print(f"[✓] ML model loaded  (threshold={_detector.thr:.3f})")
     print(f"[✓] Active features: {len(_detector.active)}")

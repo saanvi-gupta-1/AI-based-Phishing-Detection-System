@@ -38,7 +38,7 @@ ids_engine=IPSIDSEngine(
 def _load():
     global _det
     try:
-        from model_trainer import PhishingDetector
+        from models_trainer import PhishingDetector
         _det=PhishingDetector(MDL)
         print(f"[Model] Loaded  thr={_det.thr:.3f}  feats={len(_det.active)}")
     except Exception as e:
