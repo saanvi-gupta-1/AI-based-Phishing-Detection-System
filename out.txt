@@ -1,0 +1,73 @@
+﻿
+#################################################################
+  COGNITIVE FIREWALL v2 ΓÇö FULL SYSTEM TEST
+#################################################################
+
+=================================================================
+  TEST 1: Feature Extraction
+=================================================================
+  Total features defined: 81
+  Γ£à PASS  Feature count ΓëÑ 80
+  Γ£à PASS  sbi.co.in ΓåÆ trusted_domain=1, brand_abuse=0
+  Γ£à PASS  hdfc-kyc-update.xyz ΓåÆ bank_phishing=1, suspicious_tld=1
+  Γ£à PASS  IP-based URL detected
+  Γ£à PASS  URL shortener detected
+  Γ£à PASS  Typosquat detected (similarity=0.889)
+
+  Result: Feature extraction FULLY WORKING (81 features)
+
+=================================================================
+  TEST 2: Model Predictions
+=================================================================
+
+  URL                                       True  Pred   Conf%  Status
+  -----------------------------------------------------------------
+  https://sbi.co.in                            0     1    2.0%  Γ¥î FAIL  safe: SBI official
+  https://hdfcbank.com                         0     1    2.0%  Γ¥î FAIL  safe: HDFC official
+  https://google.com                           0     1    2.0%  Γ¥î FAIL  safe: Google
+  https://zerodha.com                          0     1    2.0%  Γ¥î FAIL  safe: Indian fintech
+  https://airtel.in                            0     1    2.0%  Γ¥î FAIL  safe: Airtel official
+  hdfc-kyc-update.xyz                          1     1  100.0%  Γ£à PASS  phishing: HDFC brand abuse
+  sbi-netbanking.shop                          1     1  100.0%  Γ£à PASS  phishing: SBI brand abuse
+  airtelrecharge.co.in                         1     1   99.7%  Γ£à PASS  phishing: Airtel fake
+  hdfcbankk.com                                1     1   99.3%  Γ£à PASS  phishing: typosquat
+  103.21.244.82/sbi                            1     1   95.7%  Γ£à PASS  phishing: IP-based
+  crs-orgi-gov.site                            1     1   99.9%  Γ£à PASS  phishing: govt impersonation
+  irctc-refund.xyz                             1     1   99.8%  Γ£à PASS  phishing: IRCTC fake
+  icicibank-support.net                        1     1   99.9%  Γ£à PASS  phishing: ICICI brand abuse
+  bit.ly/hdfc-kyc                              1     1   97.4%  Γ£à PASS  suspicious: shortener
+  sbi-account-locked.shop/login                1     1   98.5%  Γ£à PASS  phishing: SBI login page
+
+  Accuracy: 10/15 = 67%  Γ¥î FAIL
+
+  Γ¥î ASSERTION FAILED: Model accuracy 66.67% below 85% threshold
+
+=================================================================
+  TEST 3: IPS/IDS Engine
+=================================================================
+  Γ£à PASS  High-confidence phishing ΓåÆ BLOCKED
+  Γ£à PASS  Medium-confidence suspicious ΓåÆ ALERTED
+  Γ£à PASS  Clean URL (google.com) ΓåÆ ALLOWED
+  Γ£à PASS  Rate limiting fires after exceeding RPM threshold
+  Γ£à PASS  Repeat offender auto-blocked (threat_score=50.0)
+  Γ£à PASS  Manual block/unblock works
+  Γ£à PASS  Event log working (10 events recorded)
+  Γ£à PASS  Stats: analyzed=12, blocked=4
+
+  Result: IPS/IDS Engine FULLY WORKING
+
+=================================================================
+  TEST 4: Model Metrics Verification
+=================================================================
+
+  Model                      Accuracy   F1(wt)      AUC  Safe Prec
+  -----------------------------------------------------------------
+  Ensemble                     0.9861   0.9863   0.9990     0.0000 ΓåÉ BEST
+
+  Best model: Ensemble
+  Γ£à PASS  F1 weighted = 0.9863 ΓëÑ 0.92
+
+#################################################################
+  Γ¥î  1 TEST(S) FAILED  (3.1s)
+#################################################################
+

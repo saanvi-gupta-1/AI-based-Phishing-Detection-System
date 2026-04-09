@@ -23,6 +23,7 @@ from database import (
     log_scan, get_scan_history, upsert_ip, get_blocked_ips_db,
     log_event, get_events, get_global_stats,
 )
+from threat_intel import analyze_threats
 
 app=FastAPI(title="Cognitive Firewall API",version="3.0.0")
 app.add_middleware(CORSMiddleware,allow_origins=["*"],allow_methods=["*"],allow_headers=["*"])
@@ -55,6 +56,17 @@ def _norm(url):
     return re.sub(r"^https?://(www\.)?","",str(url).strip(),flags=re.I).rstrip("/")
 
 def _predict(url):
+    # 1. External Threat Intelligence & Dynamic Page Scanning (Zero-Day catch-all)
+    threat = analyze_threats(url)
+    if threat["flagged"]:
+        return {
+            "label": 1,
+            "confidence": threat["confidence"],
+            "features": {},
+            "reason": threat["reason"]
+        }
+
+    # 2. Local Machine Learning Model
     if _det:
         r=_det.predict_one(url)
         return {"label":r["label"],"confidence":r["confidence"],
