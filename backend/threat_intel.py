@@ -3,8 +3,8 @@ import requests
 from typing import Dict, Any
 from page_scanner import scan_html_for_phishing
 
-GSB_API_KEY = os.environ.get("GSB_API_KEY", "AIzaSyAmqyHTQN8LORRl-K-7vAVO91GaLNWjYFo")
-VT_API_KEY = os.environ.get("VT_API_KEY", "42dac05a994978a9e968f2c4e18cc63887aada400d2af086578fb7a6ff8f297f")
+GSB_API_KEY = os.environ.get("GSB_API_KEY", "")
+VT_API_KEY = os.environ.get("VT_API_KEY", "")
 
 def check_google_safe_browsing(url: str) -> dict:
     if not GSB_API_KEY:
