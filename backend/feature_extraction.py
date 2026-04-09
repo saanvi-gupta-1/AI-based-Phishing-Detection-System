@@ -25,7 +25,7 @@ TRUSTED_DOMAINS = {
     # AI / LLM
     "claude.ai","anthropic.com","openai.com","chat.openai.com",
     "gemini.google.com","copilot.microsoft.com","huggingface.co",
-    "cohere.ai","mistral.ai","perplexity.ai",
+    "cohere.ai","mistral.ai","perplexity.ai","antigravity.google",
     "docs.anthropic.com","api.anthropic.com","platform.openai.com",
     # Global tech
     "google.com","google.co.in","gmail.com","youtube.com",

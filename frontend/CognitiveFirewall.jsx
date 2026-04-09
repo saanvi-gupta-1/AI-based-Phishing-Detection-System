@@ -418,7 +418,7 @@ function TabScanner() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
               {[
                 { label: "Threat Type", val: result.threat_type || result.verdict },
-                { label: "Scan Method", val: result.prediction_reason || "ml_model" },
+                { label: "Scan Method", val: result.detection_reason || "ml_model" },
                 { label: "Scan Time", val: result.scan_duration_ms ? `${result.scan_duration_ms}ms` : "—" },
               ].map(({ label, val }) => (
                 <div key={label} style={{ background: "rgba(0,0,0,0.25)", borderRadius: 7, padding: "0.6rem 0.9rem" }}>

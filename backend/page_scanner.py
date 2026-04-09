@@ -21,7 +21,7 @@ def scan_html_for_phishing(urlStr: str) -> dict:
 
         # Check for phishing characteristics in the HTML
         has_pwd = bool(re.search(r'<input[^>]+type=[\'"]?password[\'"]?', html))
-        has_cc = bool(re.search(r'(credit card|card number|cvv|expiry date|social security|ssn)', html))
+        has_cc = bool(re.search(r'\b(credit card|card number|cvv|expiry date|social security|ssn)\b', html))
         
         score = 0.0
         reasons = []

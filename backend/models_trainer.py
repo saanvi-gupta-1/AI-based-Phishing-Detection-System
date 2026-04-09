@@ -28,7 +28,7 @@ import re
 _TWO={"co.in","co.uk","com.au","org.in","net.in","gov.in","ac.in","nic.in"}
 _TRUSTED={
     "claude.ai","anthropic.com","openai.com","chat.openai.com",
-    "gemini.google.com","copilot.microsoft.com","huggingface.co",
+    "gemini.google.com","copilot.microsoft.com","huggingface.co","antigravity.google",
     "google.com","google.co.in","gmail.com","youtube.com","maps.google.com",
     "microsoft.com","outlook.com","office.com","github.com","gitlab.com",
     "stackoverflow.com","apple.com","amazon.com","amazon.in","linkedin.com",
